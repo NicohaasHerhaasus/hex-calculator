@@ -25,4 +25,4 @@ Time to get our hands dirty! This video covers how to initialize your Git reposi
 
 ---
 
-*Note: Replace the bracketed video links above with your actual video URLs once they are uploaded.*
+
