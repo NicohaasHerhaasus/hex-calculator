@@ -25,4 +25,15 @@ Time to get our hands dirty! This video covers how to initialize your Git reposi
 
 ---
 
+## Section 2: Writing tests and drafting code
+
+### 1. Introduction to TDD(Test Driven Development)
+A high level introductory video to the development methodology we will be using for this course.
+
+* **Video Link:** [https://drive.google.com/file/d/1ieflP-b01KvcOwpWJFNybYHsVAT9kdjX/view?usp=sharing]
+
+### 2. TDD a short walkthrough
+In this video we're handling writing your first tests and then creating the code based on those tests.
+
+* **Video Link:**  [https://drive.google.com/file/d/1PLmQujR3LKUdj17e-X4EGqx-jZbU0y0z/view?usp=sharing]
 
