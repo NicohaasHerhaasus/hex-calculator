@@ -7,13 +7,67 @@ on:
     branches: ["*"]
 
 jobs:
-  test:
+  # ── Job 1: Core logic unit tests ────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests (calculator.js)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "18"
-      - run: npm install
-      - run: npm test
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests
+        run: npx jest calculator.test.js --verbose
+
+  # ── Job 2: GUI tests ────────────────────────────────────────────────────────
+  gui-tests:
+    name: GUI Tests (calculator.html)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        # jest-environment-jsdom is required for DOM simulation
+        run: npm install
+
+      - name: Run GUI tests
+        run: npx jest calculator.gui.test.js --verbose
+
+  # ── Job 3: Full test suite (runs after both jobs pass) ──────────────────────
+  all-tests:
+    name: All Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, gui-tests]   # only runs if both above pass
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run full test suite with coverage
+        run: npx jest --coverage --verbose
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/

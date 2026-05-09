@@ -20,7 +20,7 @@ function decToHex(dec) {
         throw new Error("Output cannot be negative.");
     }
     if (dec > 65535) { // 65535 in decimal is FFFF in hex
-        throw new Error("Output exceeds 4 hex digits."); 
+        throw new Error("Output exceeds 4 hex digits.");
     }
     return dec.toString(16).toUpperCase();
 }
@@ -52,5 +52,8 @@ function divide(a, b) {
     return decToHex(quotient);
 }
 
-// Export the functions so our testing file can read them
-module.exports = { add, subtract, multiply, divide };
+// Universal export: works in Node.js (for calculator.test.js) AND in the browser
+// (for calculator.html). In a browser, `module` is undefined so we skip the export.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { add, subtract, multiply, divide };
+}
