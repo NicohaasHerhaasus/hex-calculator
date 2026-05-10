@@ -4,7 +4,11 @@
   "description": "A repository containing instructions on creating a calculator app from start to finish using TDD",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --verbose",
+    "test:unit": "jest calculator.test.js --verbose",
+    "test:gui": "jest calculator.gui.test.js --verbose",
+    "test:coverage": "jest --coverage",
+    "start": "http-server . -p 8080"
   },
   "repository": {
     "type": "git",
@@ -18,6 +22,24 @@
   },
   "homepage": "https://github.com/NicohaasHerhaasus/hex-calculator#readme",
   "dependencies": {
-    "jest": "^30.3.0"
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "jest": {
+    "projects": [
+      {
+        "displayName": "unit",
+        "testMatch": ["**/calculator.test.js"],
+        "testEnvironment": "node"
+      },
+      {
+        "displayName": "gui",
+        "testMatch": ["**/calculator.gui.test.js"],
+        "testEnvironment": "jsdom"
+      }
+    ]
   }
 }
