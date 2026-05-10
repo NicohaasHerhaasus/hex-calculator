@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEX CALC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0a0c10;
+      --panel:     #0f1318;
+      --border:    #1c2a1e;
+      --green:     #00ff88;
+      --green-dim: #00c86a;
+      --green-glow:#00ff8855;
+      --amber:     #ffb700;
+      --amber-dim: #cc9200;
+      --red:       #ff4455;
+      --text:      #c8ffd4;
+      --muted:     #4a6650;
+      --btn-bg:    #111a13;
+      --btn-hover: #172219;
+      --btn-active:#0d1510;
+      --radius:    6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
+    }
+
+    /* Scanlines overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Ambient glow behind calculator */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 420px;
+      height: 700px;
+      background: radial-gradient(ellipse at center, #00ff8812 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .calculator {
+      position: relative;
+      width: 360px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px 20px;
+      box-shadow:
+        0 0 0 1px #00ff8822,
+        0 0 30px #00ff8812,
+        0 0 80px #00ff8808,
+        inset 0 1px 0 #1e3022;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .header-title {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green-glow);
+    }
+
+    .header-badge {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* Display */
+    .display-wrapper {
+      background: #060a07;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px 12px;
+      margin-bottom: 16px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 12px #00ff8808;
+      position: relative;
+    }
+
+    .display-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .display-expression {
+      font-size: 11px;
+      color: var(--muted);
+      min-height: 16px;
+      letter-spacing: 1px;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .display-main {
+      font-family: 'Orbitron', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--green);
+      text-align: right;
+      letter-spacing: 4px;
+      text-shadow: 0 0 20px var(--green-glow), 0 0 40px #00ff8822;
+      min-height: 48px;
+      line-height: 1.2;
+      word-break: break-all;
+      transition: color 0.15s;
+    }
+
+    .display-main.error {
+      font-size: 14px;
+      color: var(--red);
+      text-shadow: 0 0 10px #ff445544;
+      letter-spacing: 1px;
+    }
+
+    .display-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 36px;
+      background: var(--green);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    .display-sub {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .display-dec {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .display-mode {
+      font-size: 9px;
+      color: var(--amber);
+      letter-spacing: 2px;
+      text-shadow: 0 0 6px #ffb70055;
+    }
+
+    /* Button grid */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    /* Base button */
+    .btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      letter-spacing: 1px;
+      color: var(--text);
+      background: var(--btn-bg);
+      border: 1px solid #1a2b1c;
+      border-radius: var(--radius);
+      padding: 0;
+      height: 54px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.1s, border-color 0.1s, transform 0.08s, box-shadow 0.1s;
+      outline: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(0,255,136,0.12), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover);
+      border-color: #2a4030;
+      box-shadow: 0 0 10px #00ff8814;
+    }
+
+    .btn:hover::after { opacity: 1; }
+
+    .btn:active, .btn.pressed {
+      background: var(--btn-active);
+      transform: scale(0.94);
+      box-shadow: none;
+    }
+
+    /* Hex digit buttons */
+    .btn-hex {
+      color: var(--green);
+      text-shadow: 0 0 6px #00ff8844;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Operator buttons */
+    .btn-op {
+      color: var(--amber);
+      border-color: #2a2010;
+      text-shadow: 0 0 6px #ffb70044;
+      font-size: 20px;
+    }
+
+    .btn-op:hover {
+      border-color: #3a3018;
+      box-shadow: 0 0 10px #ffb70014;
+    }
+
+    .btn-op::after {
+      background: radial-gradient(circle at 50% 50%, rgba(255,183,0,0.1), transparent 70%);
+    }
+
+    /* Equals button */
+    .btn-equals {
+      background: #0d2016;
+      border-color: #1e4028;
+      color: var(--green);
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      text-shadow: 0 0 10px var(--green-glow);
+      box-shadow: inset 0 1px 0 #1e5030;
+    }
+
+    .btn-equals:hover {
+      background: #112a1e;
+      border-color: #2a5038;
+      box-shadow: 0 0 16px #00ff8820, inset 0 1px 0 #2a6040;
+    }
+
+    /* Clear / special */
+    .btn-clear {
+      color: var(--red);
+      border-color: #2a1015;
+      text-shadow: 0 0 6px #ff445544;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    .btn-clear:hover {
+      border-color: #3a1820;
+      box-shadow: 0 0 10px #ff445514;
+    }
+
+    .btn-backspace {
+      color: var(--amber);
+      font-size: 18px;
+    }
+
+    /* Span 2 columns */
+    .span-2 { grid-column: span 2; }
+
+    /* Divider */
+    .section-divider {
+      grid-column: span 4;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 2px 0;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .footer-text {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    /* Press ripple animation */
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    .ripple-el {
+      position: absolute;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      background: rgba(0,255,136,0.2);
+      transform: scale(0);
+      pointer-events: none;
+      animation: ripple 0.4s linear;
+    }
+  </style>
+</head>
+<body>
+<div class="calculator" id="calculator">
+  <div class="header">
+    <span class="header-title">HEX CALC</span>
+    <span class="header-badge">BASE-16</span>
+  </div>
+
+  <div class="display-wrapper">
+    <div class="display-label">// OUTPUT</div>
+    <div class="display-expression" id="expression">&nbsp;</div>
+    <div class="display-main" id="display">
+      0<span class="display-cursor" id="cursor"></span>
+    </div>
+    <div class="display-sub">
+      <span class="display-dec" id="decimal">DEC: 0</span>
+      <span class="display-mode">HEX MODE</span>
+    </div>
+  </div>
+
+  <div class="btn-grid" id="btn-grid">
+    <!-- Row 1: Control -->
+    <button class="btn btn-clear span-2" id="btn-AC"   data-action="clear">CLR</button>
+    <button class="btn btn-backspace"    id="btn-BS"   data-action="backspace">⌫</button>
+    <button class="btn btn-op"           id="btn-div"  data-action="op" data-op="÷">÷</button>
+
+    <!-- Row 2: A–D + × -->
+    <button class="btn btn-hex" id="btn-A" data-action="digit" data-val="A">A</button>
+    <button class="btn btn-hex" id="btn-B" data-action="digit" data-val="B">B</button>
+    <button class="btn btn-hex" id="btn-C" data-action="digit" data-val="C">C</button>
+    <button class="btn btn-op"  id="btn-mul" data-action="op" data-op="×">×</button>
+
+    <!-- Row 3: D–F + − -->
+    <button class="btn btn-hex" id="btn-D" data-action="digit" data-val="D">D</button>
+    <button class="btn btn-hex" id="btn-E" data-action="digit" data-val="E">E</button>
+    <button class="btn btn-hex" id="btn-F" data-action="digit" data-val="F">F</button>
+    <button class="btn btn-op"  id="btn-sub" data-action="op" data-op="−">−</button>
+
+    <div class="section-divider"></div>
+
+    <!-- Row 4: 7 8 9 + -->
+    <button class="btn btn-hex" id="btn-7" data-action="digit" data-val="7">7</button>
+    <button class="btn btn-hex" id="btn-8" data-action="digit" data-val="8">8</button>
+    <button class="btn btn-hex" id="btn-9" data-action="digit" data-val="9">9</button>
+    <button class="btn btn-op"  id="btn-add" data-action="op" data-op="+">+</button>
+
+    <!-- Row 5: 4 5 6 -->
+    <button class="btn btn-hex" id="btn-4" data-action="digit" data-val="4">4</button>
+    <button class="btn btn-hex" id="btn-5" data-action="digit" data-val="5">5</button>
+    <button class="btn btn-hex" id="btn-6" data-action="digit" data-val="6">6</button>
+    <!-- Equals spans rows 5-6 -->
+    <button class="btn btn-equals" id="btn-eq" data-action="equals" style="grid-row: span 2; height: auto;">=</button>
+
+    <!-- Row 6: 1 2 3 -->
+    <button class="btn btn-hex" id="btn-1" data-action="digit" data-val="1">1</button>
+    <button class="btn btn-hex" id="btn-2" data-action="digit" data-val="2">2</button>
+    <button class="btn btn-hex" id="btn-3" data-action="digit" data-val="3">3</button>
+
+    <!-- Row 7: 0 -->
+    <button class="btn btn-hex span-2" id="btn-0" data-action="digit" data-val="0">0</button>
+    <button class="btn btn-hex" id="btn-00" data-action="digit" data-val="00">00</button>
+    <!-- equals already placed -->
+  </div>
+
+  <div class="footer">
+    <div class="footer-dot"></div>
+    <span class="footer-text">INPUT: 1–2 HEX DIGITS</span>
+    <div class="footer-dot" style="animation-delay:1s"></div>
+  </div>
+</div>
+
+<!-- calculator.js provides: add, subtract, multiply, divide (loaded as a browser global) -->
+<script src="calculator.js"></script>
+<script>
+(function() {
+// ─── GUI State ───────────────────────────────────────────────────────────────
+
+const state = {
+  current:  '',   // digits being entered for current operand
+  operand1: null, // first stored operand (hex string)
+  operator: null, // pending operator symbol
+  justCalc: false // did we just compute a result?
+};
+
+// ─── DOM refs ────────────────────────────────────────────────────────────────
+
+const displayEl    = document.getElementById('display');
+const expressionEl = document.getElementById('expression');
+const decimalEl    = document.getElementById('decimal');
+const cursorEl     = document.getElementById('cursor');
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+function render(value, isError = false) {
+  // Remove old cursor, set text, re-append cursor
+  displayEl.className = 'display-main' + (isError ? ' error' : '');
+  displayEl.textContent = value || '0';
+  if (!isError) displayEl.appendChild(cursorEl);
+
+  // Decimal equivalent
+  if (!isError && value && isValidHex(value)) {
+    decimalEl.textContent = `DEC: ${parseInt(value, 16)}`;
+  } else {
+    decimalEl.textContent = '';
+  }
+}
+
+function renderExpression() {
+  if (state.operand1 !== null && state.operator) {
+    expressionEl.textContent = `${state.operand1} ${state.operator}`;
+  } else {
+    expressionEl.textContent = '\u00a0';
+  }
+}
+
+// ─── Input handling ──────────────────────────────────────────────────────────
+
+function inputDigit(val) {
+  // After a completed calculation, start fresh
+  if (state.justCalc) {
+    state.current = '';
+    state.justCalc = false;
+  }
+
+  const next = (state.current + val).replace(/^0+/, '') || '0';
+
+  // Enforce max 2 hex digits
+  if (next.length > 2) return flashError('MAX 2 DIGITS');
+
+  state.current = next === '0' ? '0' : next;
+  render(state.current);
+  renderExpression();
+}
+
+function inputOperator(op) {
+  // If we have a pending operation and a new current input, chain it
+  if (state.operand1 !== null && state.current !== '' && !state.justCalc) {
+    try {
+      const result = calculate(state.operand1, state.current, state.operator);
+      state.operand1 = result;
+      state.current  = '';
+      render(result);
+    } catch (e) {
+      return flashError(e.message);
+    }
+  } else if (state.current !== '' || state.justCalc) {
+    state.operand1 = state.current !== '' ? state.current : state.operand1;
+    state.current  = '';
+  } else if (state.operand1 === null) {
+    return; // Nothing to operate on
+  }
+
+  state.operator = op;
+  state.justCalc = false;
+  renderExpression();
+  render(state.operand1 || '0');
+}
+
+function inputEquals() {
+  if (state.operand1 === null || state.operator === null) return;
+  const b = state.current !== '' ? state.current : state.operand1;
+  if (!isValidHex(state.operand1) || !isValidHex(b)) {
+    return flashError('INVALID INPUT');
+  }
+  try {
+    const result = calculate(state.operand1, b, state.operator);
+    expressionEl.textContent = `${state.operand1} ${state.operator} ${b} =`;
+    state.operand1 = null;
+    state.operator = null;
+    state.current  = result;
+    state.justCalc = true;
+    render(result);
+  } catch (e) {
+    flashError(e.message);
+  }
+}
+
+function calculate(a, b, op) {
+  switch (op) {
+    case '+': return add(a, b);
+    case '−': return subtract(a, b);
+    case '×': return multiply(a, b);
+    case '÷': return divide(a, b);
+    default: throw new Error('Unknown operator');
+  }
+}
+
+function doClear() {
+  state.current  = '';
+  state.operand1 = null;
+  state.operator = null;
+  state.justCalc = false;
+  render('0');
+  expressionEl.textContent = '\u00a0';
+  decimalEl.textContent    = 'DEC: 0';
+}
+
+function doBackspace() {
+  if (state.justCalc) { doClear(); return; }
+  state.current = state.current.slice(0, -1);
+  render(state.current || '0');
+}
+
+function flashError(msg) {
+  const prev = state.current;
+  render(msg, true);
+  expressionEl.textContent = '\u00a0';
+  decimalEl.textContent    = '';
+  setTimeout(() => {
+    render(prev || state.operand1 || '0');
+    renderExpression();
+  }, 1800);
+}
+
+// ─── Button wiring ───────────────────────────────────────────────────────────
+
+document.getElementById('btn-grid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+
+  // Ripple effect
+  const rect = btn.getBoundingClientRect();
+  const r    = document.createElement('span');
+  r.className = 'ripple-el';
+  r.style.left = `${e.clientX - rect.left - 10}px`;
+  r.style.top  = `${e.clientY - rect.top - 10}px`;
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+
+  const { action, val, op } = btn.dataset;
+  switch (action) {
+    case 'digit':    inputDigit(val);    break;
+    case 'op':       inputOperator(op);  break;
+    case 'equals':   inputEquals();      break;
+    case 'clear':    doClear();          break;
+    case 'backspace': doBackspace();     break;
+  }
+});
+
+// ─── Keyboard support ────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  const k = e.key.toUpperCase();
+  if ('0123456789ABCDEF'.includes(k) && k.length === 1) { inputDigit(k); return; }
+  if (e.key === 'Backspace') { doBackspace(); return; }
+  if (e.key === 'Escape')    { doClear();     return; }
+  if (e.key === 'Enter' || e.key === '=') { inputEquals(); return; }
+  if (e.key === '+') { inputOperator('+'); return; }
+  if (e.key === '-') { inputOperator('−'); return; }
+  if (e.key === '*') { inputOperator('×'); return; }
+  if (e.key === '/') { e.preventDefault(); inputOperator('÷'); return; }
+});
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+render('0');
+})(); // end IIFE
+</script>
+</body>
+</html>

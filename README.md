@@ -37,3 +37,19 @@ In this video we're handling writing your first tests and then creating the code
 
 * **Video Link:**  [https://drive.google.com/file/d/1PLmQujR3LKUdj17e-X4EGqx-jZbU0y0z/view?usp=sharing]
 
+---
+
+## Section 3: Testing the GUI
+
+### 1. Creating the GUI
+A quick overview of building an html frontend with retro styling.
+
+* **Video Link:** [https://drive.google.com/file/d/1-0-BFkqHbUPYneBJ0qKksFYVKUTu-gu6/view?usp=sharing]
+
+### 2. Testing the GUI
+In this video we're handling writing frontend tests using jest.
+
+* **Video Link:** [https://drive.google.com/file/d/1qwDkSsixYpCr76_dI3xsz3zJJP1mhkxH/view?usp=sharing]
+
+---
+
