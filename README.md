@@ -56,8 +56,10 @@ In this video we're handling writing frontend tests using jest.
 ## Section 4: Porting into containers and cloud service
 
 ### 1. Containerizing your application
+This video covers writing a functional Dockerfile that specifies the application's runtime
+environment
 
-* **Video Link:** []
+* **Video Link:** [https://drive.google.com/file/d/18bWVK6POZFoFtGXrHaooiQ7PhioTsFM0/view?usp=drive_link]
 
 ### 2. Deploying to AWS
 In these videos we're handling pushing a docker image to ECR, setting up an EC2 instance and running your application on that instace
